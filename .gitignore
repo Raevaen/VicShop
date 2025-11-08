@@ -1,0 +1,9 @@
+[Bb]in/
+[Oo]bj/
+.next
+out
+node_modules/
+.vscode/
+.idea/
+*.log
+*.tmp

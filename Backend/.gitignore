@@ -1,0 +1,8 @@
+bin/
+obj/
+*.user
+*.suo
+*.swp
+*.db
+*.DS_Store
+secrets.json

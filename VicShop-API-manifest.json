@@ -1,0 +1,10 @@
+{
+  "clientId": "54468cdb-3861-473d-aafc-de17f496bd4c",
+  "tenantId": "e66763a0-7cd8-4cf2-972a-472c8c3cc554",
+  "scopes": [
+    {
+      "name": "access_as_user",
+      "description": "Allows the app to access the API as a signed-in user."
+    }
+  ]
+}
