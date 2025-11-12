@@ -1,0 +1,6 @@
+@VicShopAPI_HostAddress = http://localhost:5267
+
+GET {{VicShopAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
