@@ -24,8 +24,8 @@ public class ProductsControllerTests
         // Arrange
         var products = new List<Product>
         {
-            new Product { Id = "1", Name = "Product 1", Slug = "product-1" },
-            new Product { Id = "2", Name = "Product 2", Slug = "product-2" }
+            new Product { Id = "1", Title = "Product 1", Slug = "product-1" },
+            new Product { Id = "2", Title = "Product 2", Slug = "product-2" }
         };
         _mockRepo.Setup(repo => repo.GetAllAsync()).ReturnsAsync(products);
 
@@ -43,7 +43,7 @@ public class ProductsControllerTests
     {
         // Arrange
         var slug = "test-product";
-        var product = new Product { Id = "1", Name = "Test Product", Slug = slug };
+        var product = new Product { Id = "1", Title = "Test Product", Slug = slug };
         _mockRepo.Setup(repo => repo.GetBySlugAsync(slug)).ReturnsAsync(product);
 
         // Act
