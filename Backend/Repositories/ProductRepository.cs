@@ -3,14 +3,12 @@ using VicShopAPI.Models;
 
 namespace VicShopAPI.Repositories;
 
-public class ProductRepository
+public class ProductRepository : IProductRepository
 {
     private readonly IMongoCollection<Product> _products;
 
-    public ProductRepository(IConfiguration configuration)
+    public ProductRepository(IMongoDatabase database)
     {
-        var client = new MongoClient(configuration["MongoDB:ConnectionString"]);
-        var database = client.GetDatabase(configuration["MongoDB:Database"]);
         _products = database.GetCollection<Product>("products");
     }
 

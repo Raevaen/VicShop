@@ -8,9 +8,9 @@ namespace VicShopAPI.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-    private readonly ProductRepository _repository;
+    private readonly IProductRepository _repository;
 
-    public ProductsController(ProductRepository repository)
+    public ProductsController(IProductRepository repository)
     {
         _repository = repository;
     }
