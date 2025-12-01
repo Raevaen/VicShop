@@ -12,8 +12,16 @@ const ProductCard = ({ product }) => {
         <div className="product-card">
             <div className="product-image-container">
                 <img src={product.images[0]} alt={product.title} className="product-image" />
+                <div className="product-badges">
+                    {product.condition && <span className="badge badge-condition">{product.condition}</span>}
+                    {product.size && <span className="badge badge-size">{product.size}</span>}
+                </div>
             </div>
             <div className="product-details">
+                <div className="product-meta">
+                    {product.team && <span className="product-team">{product.team}</span>}
+                    {product.season && <span className="product-season">{product.season}</span>}
+                </div>
                 <h3 className="product-title">{product.title}</h3>
                 <p className="product-description">{product.description}</p>
                 <div className="product-footer">

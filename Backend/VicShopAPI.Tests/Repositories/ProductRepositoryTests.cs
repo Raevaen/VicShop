@@ -57,6 +57,93 @@ public class ProductRepositoryTests
     }
 
     [Fact]
+    public async Task GetAllAsync_ReturnsProductsWithSoccerAttributes()
+    {
+        // Arrange
+        var products = new List<Product>
+        {
+            new Product 
+            { 
+                Id = "1", 
+                Title = "Retro Shirt", 
+                Slug = "retro-shirt",
+                Team = "AC Milan",
+                League = "Serie A",
+                Season = "1989/90",
+                Size = "L",
+                Condition = "Excellent",
+                Brand = "Kappa"
+            }
+        };
+
+        var mockCursor = new Mock<IAsyncCursor<Product>>();
+        mockCursor.Setup(_ => _.Current).Returns(products);
+        mockCursor
+            .SetupSequence(_ => _.MoveNext(It.IsAny<CancellationToken>()))
+            .Returns(true)
+            .Returns(false);
+        mockCursor
+            .SetupSequence(_ => _.MoveNextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true)
+            .ReturnsAsync(false);
+
+        _mockCollection.Setup(op => op.FindAsync(
+            It.IsAny<FilterDefinition<Product>>(),
+            It.IsAny<FindOptions<Product, Product>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockCursor.Object);
+
+        // Act
+        var result = await _repository.GetAllAsync();
+
+        // Assert
+        Assert.Single(result);
+        var product = result.First();
+        Assert.Equal("AC Milan", product.Team);
+        Assert.Equal("Serie A", product.League);
+        Assert.Equal("1989/90", product.Season);
+        Assert.Equal("L", product.Size);
+        Assert.Equal("Excellent", product.Condition);
+        Assert.Equal("Kappa", product.Brand);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsFilteredProducts_WhenTeamOrLeagueProvided()
+    {
+        // Arrange
+        var products = new List<Product>
+        {
+            new Product { Id = "1", Team = "AC Milan", League = "Serie A" },
+            new Product { Id = "2", Team = "Inter Milan", League = "Serie A" },
+            new Product { Id = "3", Team = "Manchester United", League = "Premier League" }
+        };
+
+        var mockCursor = new Mock<IAsyncCursor<Product>>();
+        mockCursor.Setup(_ => _.Current).Returns(products.Where(p => p.Team == "AC Milan").ToList());
+        mockCursor
+            .SetupSequence(_ => _.MoveNext(It.IsAny<CancellationToken>()))
+            .Returns(true)
+            .Returns(false);
+        mockCursor
+            .SetupSequence(_ => _.MoveNextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true)
+            .ReturnsAsync(false);
+
+        _mockCollection.Setup(op => op.FindAsync(
+            It.IsAny<FilterDefinition<Product>>(),
+            It.IsAny<FindOptions<Product, Product>>(),
+            It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockCursor.Object);
+
+        // Act
+        var result = await _repository.GetAllAsync(team: "AC Milan");
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("AC Milan", result.First().Team);
+    }
+
+    [Fact]
     public async Task GetBySlugAsync_ReturnsProduct_WhenExists()
     {
         // Arrange

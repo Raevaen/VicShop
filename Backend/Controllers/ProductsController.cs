@@ -16,9 +16,9 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Product>>> GetAll()
+    public async Task<ActionResult<List<Product>>> GetAll([FromQuery] string? team, [FromQuery] string? league)
     {
-        var products = await _repository.GetAllAsync();
+        var products = await _repository.GetAllAsync(team, league);
         return Ok(products);
     }
 

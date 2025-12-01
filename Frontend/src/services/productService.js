@@ -1,8 +1,12 @@
 import api from './api';
 
-export const getProducts = async () => {
+export const getProducts = async (filters = {}) => {
     try {
-        const response = await api.get('/products');
+        const params = new URLSearchParams();
+        if (filters.team) params.append('team', filters.team);
+        if (filters.league) params.append('league', filters.league);
+
+        const response = await api.get(`/products?${params.toString()}`);
         return response.data;
     } catch (error) {
         console.error("Error fetching products:", error);

@@ -27,10 +27,10 @@ public class ProductsControllerTests
             new Product { Id = "1", Title = "Product 1", Slug = "product-1" },
             new Product { Id = "2", Title = "Product 2", Slug = "product-2" }
         };
-        _mockRepo.Setup(repo => repo.GetAllAsync()).ReturnsAsync(products);
+        _mockRepo.Setup(repo => repo.GetAllAsync(It.IsAny<string?>(), It.IsAny<string?>())).ReturnsAsync(products);
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAll(null, null);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
