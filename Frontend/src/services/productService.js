@@ -38,7 +38,6 @@ export const getProducts = async (filters = {}) => {
             }
         ];
     }
-    }
 };
 
 export const getProductBySlug = async (slug) => {
