@@ -4,6 +4,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { msalInstance } from "./authConfig";
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import ProductDetail from './pages/ProductDetail';
 import './index.css';
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/product/:slug" element={<ProductDetail />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
       </Router>

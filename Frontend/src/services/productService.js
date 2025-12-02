@@ -38,4 +38,15 @@ export const getProducts = async (filters = {}) => {
             }
         ];
     }
+    }
+};
+
+export const getProductBySlug = async (slug) => {
+    try {
+        const response = await api.get(`/products/${slug}`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error fetching product ${slug}:`, error);
+        return null;
+    }
 };

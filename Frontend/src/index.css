@@ -343,3 +343,128 @@ body {
 .nav-link:hover {
   color: var(--primary-color);
 }
+
+/* Product Card Link */
+.product-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  height: 100%;
+}
+
+/* Product Detail Page */
+.product-detail-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  margin-top: 2rem;
+}
+
+.product-detail-image {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.product-detail-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.product-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.detail-title {
+  font-size: 2.5rem;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.detail-meta {
+  display: flex;
+  gap: 1rem;
+}
+
+.meta-tag {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+}
+
+.team-tag {
+  background-color: rgba(100, 108, 255, 0.1);
+  color: var(--primary-color);
+}
+
+.season-tag {
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+}
+
+.detail-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.detail-attributes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  background-color: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.attribute-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.attribute-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.attribute-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.detail-description h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.detail-description p {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .product-detail-container {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
