@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { getProductBySlug } from '../services/productService';
+import { useCart } from '../context/CartContext';
 
 const ProductDetail = () => {
     const { slug } = useParams();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { addToCart } = useCart();
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -79,7 +81,7 @@ const ProductDetail = () => {
                         </div>
 
                         <div className="detail-actions">
-                            <button className="btn btn-primary btn-lg">Add to Cart</button>
+                            <button className="btn btn-primary btn-lg" onClick={() => addToCart(product)}>Add to Cart</button>
                             <Link to="/" className="btn btn-outline">Back to Shop</Link>
                         </div>
                     </div>

@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from '../authConfig';
 
+import { useCart } from '../context/CartContext';
+
 const Navbar = () => {
     const { instance, accounts } = useMsal();
     const isAuthenticated = useIsAuthenticated();
+    const { cartCount } = useCart();
 
     const handleLogin = () => {
         instance.loginPopup(loginRequest).catch(e => {
@@ -23,6 +26,9 @@ const Navbar = () => {
         <nav className="navbar">
             <Link to="/" className="navbar-brand">VicShop</Link>
             <div className="navbar-menu">
+                <Link to="/cart" className="cart-link">
+                    Cart {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+                </Link>
                 {isAuthenticated ? (
                     <div className="user-info">
                         <Link to="/profile" className="nav-link">Profile</Link>

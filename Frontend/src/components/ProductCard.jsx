@@ -1,7 +1,10 @@
 import React from 'react';
+import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 
 const ProductCard = ({ product }) => {
+    const { addToCart } = useCart();
+
     const formatPrice = (cents) => {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
@@ -29,8 +32,8 @@ const ProductCard = ({ product }) => {
                     <div className="product-footer">
                         <span className="product-price">{formatPrice(product.priceCents)}</span>
                         <button className="btn btn-sm btn-primary" onClick={(e) => {
-                            e.preventDefault(); // Prevent navigation when clicking add to cart
-                            // Add to cart logic here
+                            e.preventDefault();
+                            addToCart(product);
                         }}>Add to Cart</button>
                     </div>
                 </div>

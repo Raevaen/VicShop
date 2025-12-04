@@ -24,6 +24,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(builder.Configuration["MongoDB:ConnectionString"]));
 builder.Services.AddSingleton<IMongoDatabase>(sp => sp.GetRequiredService<IMongoClient>().GetDatabase(builder.Configuration["MongoDB:Database"]));
 builder.Services.AddSingleton<IProductRepository, ProductRepository>();
+builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
 builder.Services.AddControllers();
