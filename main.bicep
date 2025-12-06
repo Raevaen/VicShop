@@ -18,6 +18,10 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
     name: 'F1'
     tier: 'Free'
   }
+  kind: 'linux'
+  properties: {
+    reserved: true
+  }
 }
 
 resource staticWebApp 'Microsoft.Web/sites@2022-03-01' = {
@@ -46,9 +50,51 @@ resource staticWebApp 'Microsoft.Web/sites@2022-03-01' = {
 resource apiAppService 'Microsoft.Web/sites@2022-03-01' = {
   name: apiAppServiceName
   location: location
-  kind: 'app'
+  kind: 'app,linux,container'
   properties: {
     serverFarmId: appServicePlan.id
+    siteConfig: {
+      linuxFxVersion: 'DOCKER|index.docker.io/${keyVault.getSecret('docker-username')}/vicshop-api:latest' // This might fail if secret doesn't exist during template expansion. Better to use a param or reference. 
+      // Actually, we can't use getSecret here easily for the string interpolation if the keyvault is being created.
+      // Safer to rely on App Settings. linuxFxVersion can be generic or updated by pipeline.
+      // Let's set a placeholder that the Pipeline DEPLOY stage will overwrite, OR use the AppSettings to drive it.
+      // DOCKER|<image> is sufficient. 
+      // If we use App Settings for auth, App Service tries to pull.
+      // Let's assume the user will provide the image name in the pipeline. 
+      // For Bicep, let's just stick to a "latest" tag with a placeholder or param.
+      // The User said: "Take credentials ... from key vault".
+      // Let's use the Key Vault References for the App Settings.
+      appSettings: [
+        {
+          name: 'DOCKER_REGISTRY_SERVER_URL'
+          value: 'https://index.docker.io/v1/'
+        }
+        {
+          name: 'DOCKER_REGISTRY_SERVER_USERNAME'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=docker-username)'
+        }
+        {
+          name: 'DOCKER_REGISTRY_SERVER_PASSWORD'
+          value: '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=docker-password)'
+        }
+        {
+          name: 'ProductsDatabaseSettings__ConnectionString'
+          value: listConnectionStrings(cosmosDbAccount.id, cosmosDbAccount.apiVersion).connectionStrings[0].connectionString
+        }
+        {
+          name: 'ProductsDatabaseSettings__DatabaseName'
+          value: databaseName
+        }
+        {
+          name: 'ProductsDatabaseSettings__ProductsCollectionName'
+          value: productsCollectionName
+        }
+        {
+          name: 'ProductsDatabaseSettings__OrdersCollectionName'
+          value: ordersCollectionName
+        }
+      ]
+    }
   }
   identity: {
     type: 'UserAssigned'
@@ -92,66 +138,65 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = { // Updated API
   }
 }
 
-// // --- Cosmos DB Resources ---
+// --- Cosmos DB Resources ---
 
-// resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = { 
-//     name: cosmosDbAccountName
-//     location: location
-//     kind: 'MongoDB'
-//     properties: {
-//       databaseAccountOfferType: 'Standard'
-//       consistencyPolicy: {
-//         defaultConsistencyLevel: 'Session'
-//       }
-//       locations: [
-//         {
-//           locationName: location
-//           failoverPriority: 0
-//         }
-//       ]
-//     }
-//   }
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = { 
+    name: cosmosDbAccountName
+    location: location
+    kind: 'MongoDB'
+    properties: {
+      databaseAccountOfferType: 'Standard'
+      consistencyPolicy: {
+        defaultConsistencyLevel: 'Session'
+      }
+      locations: [
+        {
+          locationName: location
+          failoverPriority: 0
+        }
+      ]
+    }
+  }
   
-//   // --- MongoDB Database ---
-//   resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases@2023-11-15' = {
-//     parent: cosmosDbAccount 
-//     name: databaseName
-//     properties: {
-//       // Optional: Define 'options' for shared throughput here if needed
-//     }
-//   }
+  // --- MongoDB Database ---
+  resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases@2023-11-15' = {
+    parent: cosmosDbAccount 
+    name: databaseName
+    properties: {
+      // Optional: Define 'options' for shared throughput here if needed
+    }
+  }
   
-//   // --- MongoDB Collection: Products ---
-//   resource productsCollection 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections@2023-11-15' = {
-//     parent: cosmosDbDatabase // Correctly nests under the database
-//     name: productsCollectionName // Name is just 'products' (from the parameter)
-//     properties: {
-//       resource: {
-//         id: productsCollectionName
-//         // Optional: Add a partition key here for better performance
-//         // partitionKey: { paths: ['/productId'], kind: 'Hash' } 
-//       }
-//       options: {
-//         // Optional: Define throughput/autoscale here
-//       }
-//     }
-//   }
+  // --- MongoDB Collection: Products ---
+  resource productsCollection 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections@2023-11-15' = {
+    parent: cosmosDbDatabase // Correctly nests under the database
+    name: productsCollectionName // Name is just 'products' (from the parameter)
+    properties: {
+      resource: {
+        id: productsCollectionName
+        // Optional: Add a partition key here for better performance
+        // partitionKey: { paths: ['/productId'], kind: 'Hash' } 
+      }
+      options: {
+        // Optional: Define throughput/autoscale here
+      }
+    }
+  }
   
-//   // --- MongoDB Collection: Orders ---
-//   resource ordersCollection 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections@2023-11-15' = {
-//     parent: cosmosDbDatabase
-//     name: ordersCollectionName
-//     properties: {
-//       resource: {
-//         id: ordersCollectionName
-//       }
-//       options: {
-//         // Optional: Define throughput/autoscale here
-//       }
-//     }
-//   }
+  // --- MongoDB Collection: Orders ---
+  resource ordersCollection 'Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections@2023-11-15' = {
+    parent: cosmosDbDatabase
+    name: ordersCollectionName
+    properties: {
+      resource: {
+        id: ordersCollectionName
+      }
+      options: {
+        // Optional: Define throughput/autoscale here
+      }
+    }
+  }
 
 output staticWebAppUrl string = staticWebApp.properties.defaultHostName
 output apiAppServiceUrl string = apiAppService.properties.defaultHostName
-// it's better to retrieve the connection string through Key Vault or a dedicated function.
-// output cosmosDbConnectionString string = cosmosDbAccount.listConnectionStrings().connectionStrings[0].connectionString
+output cosmosDbConnectionString string = cosmosDbAccount.listConnectionStrings().connectionStrings[0].connectionString

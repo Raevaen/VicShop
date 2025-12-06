@@ -91,7 +91,7 @@ const Cart = () => {
                                 </div>
                                 <div className="cart-buttons">
                                     <button className="btn btn-outline" onClick={clearCart}>Clear Cart</button>
-                                    <button className="btn btn-primary checkout-btn" onClick={handleCheckout}>Proceed to Checkout</button>
+                                    <Link to="/checkout" className="btn btn-primary checkout-btn">Proceed to Checkout</Link>
                                 </div>
                             </div>
                         </>

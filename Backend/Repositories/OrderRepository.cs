@@ -21,4 +21,14 @@ public class OrderRepository : IOrderRepository
     {
         return await _orders.Find(o => o.UserId == userId).SortByDescending(o => o.CreatedAt).ToListAsync();
     }
+
+    public async Task<Order?> GetByIdAsync(string id)
+    {
+        return await _orders.Find(o => o.Id == id).FirstOrDefaultAsync();
+    }
+
+    public async Task UpdateAsync(string id, Order order)
+    {
+        await _orders.ReplaceOneAsync(o => o.Id == id, order);
+    }
 }

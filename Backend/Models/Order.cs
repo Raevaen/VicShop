@@ -15,10 +15,16 @@ public class Order
 
     public int TotalAmountCents { get; set; }
 
-    public string Status { get; set; } = "Pending"; // Pending, Completed, Cancelled
+    public string Status { get; set; } = "Pending"; // Pending, Paid, Failed, Cancelled
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     // Simplified shipping address for now
     public string? ShippingAddress { get; set; }
+    
+    // Payment tracking (no card details stored)
+    public string? MolliePaymentId { get; set; }
+    public string? PaymentStatus { get; set; } // open, paid, failed, expired, canceled
+    public string? PaymentMethod { get; set; } // ideal, creditcard, etc.
+    public DateTime? PaidAt { get; set; }
 }

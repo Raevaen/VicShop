@@ -7,8 +7,8 @@ import Profile from './pages/Profile';
 import ProductDetail from './pages/ProductDetail';
 import { CartProvider } from './context/CartContext';
 import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 import CheckoutSuccess from './pages/CheckoutSuccess';
-import CheckoutFailed from './pages/CheckoutFailed';
 import './index.css';
 
 function App() {
@@ -21,8 +21,8 @@ function App() {
             <Route path="/product/:slug" element={<ProductDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/success" element={<CheckoutSuccess />} />
-            <Route path="/checkout/failed" element={<CheckoutFailed />} />
           </Routes>
         </Router>
       </CartProvider>
