@@ -62,7 +62,7 @@ resource apiAppService 'Microsoft.Web/sites@2022-03-01' = {
       // If we use App Settings for auth, App Service tries to pull.
       // Let's assume the user will provide the image name in the pipeline. 
       // For Bicep, let's just stick to a "latest" tag with a placeholder or param.
-      // The User said: "Take credentials ... from key vault".
+      // The User said: "Take credentials from key vault".
       // Let's use the Key Vault References for the App Settings.
       appSettings: [
         {
