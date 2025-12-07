@@ -6,13 +6,13 @@ pool:
 
 variables:
   azureServiceConnection: 'azure-connection' # Created in ADO Project Settings
-  resourceGroupName: 'rg_vicshop_prod'
+  resourceGroupName: 'rg-vic-eshop'
   location: 'italynorth'
   # Docker Hub settings
   # Note: dockerHubNamespace should match the 'docker-username' secret in KV usually, 
   # or be a separate variable suitable for the repo path.
   # We will read 'docker-username' from KV and use it as namespace for simplicity.
-  appServicePlanName: 'plan-vicshop'
+  appServicePlanName: 'asp-vic-shop-free'
   staticWebAppName: 'swa-vicshop'
   apiAppName: 'app-vicshop-api'
   keyVaultName: 'kv-vic-shop'
