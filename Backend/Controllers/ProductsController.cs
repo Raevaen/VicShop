@@ -8,17 +8,17 @@ namespace VicShopAPI.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-    private readonly ProductRepository _repository;
+    private readonly IProductRepository _repository;
 
-    public ProductsController(ProductRepository repository)
+    public ProductsController(IProductRepository repository)
     {
         _repository = repository;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Product>>> GetAll()
+    public async Task<ActionResult<List<Product>>> GetAll([FromQuery] string? team, [FromQuery] string? league)
     {
-        var products = await _repository.GetAllAsync();
+        var products = await _repository.GetAllAsync(team, league);
         return Ok(products);
     }
 

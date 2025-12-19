@@ -15,4 +15,12 @@ public class Product
     public int PriceCents { get; set; }
     public List<string> Images { get; set; } = new();
     public int Stock { get; set; }
+
+    // Soccer Specific Attributes
+    public string? Team { get; set; }
+    public string? League { get; set; }
+    public string? Season { get; set; }
+    public string? Size { get; set; }
+    public string? Condition { get; set; }
+    public string? Brand { get; set; }
 }

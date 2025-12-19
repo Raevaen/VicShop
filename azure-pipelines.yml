@@ -1,0 +1,158 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  azureServiceConnection: 'azure-connection' # Created in ADO Project Settings
+  resourceGroupName: 'rg-vic-eshop'
+  location: 'italynorth'
+  # Docker Hub settings
+  # Note: dockerHubNamespace should match the 'docker-username' secret in KV usually, 
+  # or be a separate variable suitable for the repo path.
+  # We will read 'docker-username' from KV and use it as namespace for simplicity.
+  appServicePlanName: 'asp-vic-shop-free'
+  staticWebAppName: 'swa-vicshop'
+  apiAppName: 'app-vicshop-api'
+  keyVaultName: 'kv-vic-shop'
+  cosmosAccountName: 'cosmos-vicshop'
+  imageName: 'vicshop-api'
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Infra
+  displayName: 'Infrastructure Provisioning'
+  jobs:
+  - job: BicepDeploy
+    displayName: 'Deploy Bicep'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Deploy Main Bicep'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az group create --name $(resourceGroupName) --location $(location)
+          az deployment group create \
+            --resource-group $(resourceGroupName) \
+            --template-file main.bicep \
+            --parameters \
+              location=$(location) \
+              appServicePlanName=$(appServicePlanName) \
+              staticWebAppName=$(staticWebAppName) \
+              apiAppServiceName=$(apiAppName) \
+              keyVaultName=$(keyVaultName) \
+              managedIdentityName='id-vicshop' \
+              cosmosDbAccountName=$(cosmosAccountName) 
+              # containerRegistryName removed
+
+- stage: Build
+  displayName: 'Build and Push'
+  dependsOn: Infra
+  jobs:
+  - job: DockerBuild
+    displayName: 'Build Backend Docker'
+    steps:
+    - task: AzureKeyVault@2
+      displayName: 'Get Secrets from KV'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        KeyVaultName: $(keyVaultName)
+        SecretsFilter: 'docker-username,docker-password'
+        RunAsPreJob: false
+
+    - task: Docker@2
+      displayName: 'Login to Docker Hub'
+      inputs:
+        command: login
+        containerRegistry: '' # uses docker hub by default if empty or 'docker.io'
+        # For generic login without service connection:
+        # We can use the 'login' command with arguments or use script.
+        # Docker@2 login typically wants a Service Connection.
+        # To avoid creating a Docker Registry Service Connection (User task), we can use CLI.
+    - script: |
+        echo $(docker-password) | docker login -u $(docker-username) --password-stdin
+      displayName: 'Docker Login (Script)'
+      
+    - task: Docker@2
+      displayName: 'Build and Push API'
+      inputs:
+        repository: '$(docker-username)/$(imageName)' # Assuming username is the namespace
+        command: 'buildAndPush'
+        Dockerfile: 'Backend/Dockerfile'
+        tags: |
+          $(tag)
+          latest
+
+  - job: FrontendBuild
+    displayName: 'Build Frontend'
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+    - script: |
+        cd Frontend
+        npm ci
+        npm run build
+      displayName: 'npm install and build'
+    - publish: Frontend/dist
+      artifact: frontend-dist
+
+- stage: Deploy
+  displayName: 'Deploy Apps'
+  dependsOn: Build
+  jobs:
+  - job: DeployBackend
+    displayName: 'Deploy Backend'
+    steps:
+    # Need to fetch the username again to construct the image name, 
+    # OR pass it as variable from previous stage (complex in YAML).
+    # Simplest: Fetch secrets again.
+    - task: AzureKeyVault@2
+      displayName: 'Get Secrets from KV'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        KeyVaultName: $(keyVaultName)
+        SecretsFilter: 'docker-username'
+        
+    - task: AzureWebAppContainer@1
+      displayName: 'Deploy to App Service'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        appName: $(apiAppName)
+        # Use simple string for image name, relying on previously fetched secret variable
+        imageName: '$(docker-username)/$(imageName):$(tag)'
+    
+    - task: AzureCLI@2
+      displayName: 'Restart App Service'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az webapp restart --name $(apiAppName) --resource-group $(resourceGroupName)
+  
+  - job: DeployFrontend
+    displayName: 'Deploy Frontend'
+    steps:
+    - download: current
+      artifact: frontend-dist
+    - task: AzureStaticWebApp@0
+      displayName: 'Deploy Static Web App'
+      inputs:
+        app_location: '/' 
+        output_location: '' 
+        skip_app_build: true
+        azure_static_web_apps_api_token: '' 
+    - task: AzureCLI@2
+      displayName: 'Deploy SWA (CLI)'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          TOKEN=$(az staticwebapp secrets list --name $(staticWebAppName) --resource-group $(resourceGroupName) --query "properties.apiKey" -o tsv)
+          npm install -g @azure/static-web-apps-cli
+          swa deploy $(Pipeline.Workspace)/frontend-dist --env production --deployment-token $TOKEN
