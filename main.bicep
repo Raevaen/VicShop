@@ -38,11 +38,11 @@ resource staticWebApp 'Microsoft.Web/sites@2022-03-01' = {
         }
       ]
     }
-    identity: {
-      type: 'UserAssigned'
-      userAssignedIdentities: {
-        '${managedIdentity.id}': {}
-      }
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
     }
   }
 }
@@ -54,16 +54,8 @@ resource apiAppService 'Microsoft.Web/sites@2022-03-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     siteConfig: {
-      linuxFxVersion: 'DOCKER|index.docker.io/${keyVault.getSecret('docker-username')}/vicshop-api:latest' // This might fail if secret doesn't exist during template expansion. Better to use a param or reference. 
-      // Actually, we can't use getSecret here easily for the string interpolation if the keyvault is being created.
-      // Safer to rely on App Settings. linuxFxVersion can be generic or updated by pipeline.
-      // Let's set a placeholder that the Pipeline DEPLOY stage will overwrite, OR use the AppSettings to drive it.
-      // DOCKER|<image> is sufficient. 
-      // If we use App Settings for auth, App Service tries to pull.
-      // Let's assume the user will provide the image name in the pipeline. 
-      // For Bicep, let's just stick to a "latest" tag with a placeholder or param.
-      // The User said: "Take credentials from key vault".
-      // Let's use the Key Vault References for the App Settings.
+      linuxFxVersion: 'DOCKER|vicshop-api:latest' // Placeholder, pipeline overrides this or uses settings
+      
       appSettings: [
         {
           name: 'DOCKER_REGISTRY_SERVER_URL'
@@ -79,7 +71,7 @@ resource apiAppService 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'ProductsDatabaseSettings__ConnectionString'
-          value: listConnectionStrings(cosmosDbAccount.id, cosmosDbAccount.apiVersion).connectionStrings[0].connectionString
+          value: cosmosDbAccount.listConnectionStrings().connectionStrings[0].connectionString
         }
         {
           name: 'ProductsDatabaseSettings__DatabaseName'
@@ -163,6 +155,9 @@ resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
     parent: cosmosDbAccount 
     name: databaseName
     properties: {
+      resource: {
+        id: databaseName
+      }
       // Optional: Define 'options' for shared throughput here if needed
     }
   }
