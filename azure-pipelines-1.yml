@@ -16,6 +16,10 @@ steps:
   displayName: 'Install Node.js'
 
 - script: |
-    pwd
-    ls -al
+    pwd > echo
   displayName: 'locate folders'
+
+- task: Npm@1
+  inputs:
+    command: 'install'
+    workingDir: 'Frontend'
