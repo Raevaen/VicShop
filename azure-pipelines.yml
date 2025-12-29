@@ -28,6 +28,12 @@ stages:
     displayName: 'Deploy Bicep'
     steps:
     - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'azure-connection'
+        scriptType: 'ps'
+        scriptLocation: 'inlineScript'
+        inlineScript: 'az rggroup fail'
+    - task: AzureCLI@2
       displayName: 'Deploy Main Bicep'
       inputs:
         azureSubscription: $(azureServiceConnection)
