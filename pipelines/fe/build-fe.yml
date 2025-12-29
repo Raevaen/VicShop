@@ -33,7 +33,7 @@ steps:
 
   - script: |
       set -e
-      
+      cd Frontend
       npm ci
       npm run build
     displayName: "Build Vite/React (Frontend)"
