@@ -39,32 +39,24 @@ steps:
     displayName: "Build Vite/React (Frontend)"
 
   # Docker Hub login
-  - bash: |
-      set -euo pipefail
-      echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
-    displayName: "Docker Hub login"
-    env:
-      DOCKER_USERNAME: $(docker-username)
-      DOCKER_PASSWORD: $(docker-password)
+  - task: Docker@2
+    displayName: "Login to Docker registry"
+    inputs:
+      command: login
+      containerRegistry: azrdocker-connection
 
-  # Build + push nginx image
-  - bash: |
-      set -euo pipefail
-
-      IMAGE="$DOCKER_USERNAME/$(imageName)"
-      echo "Building: ${IMAGE}:$(tag) and ${IMAGE}:latest"
-
-      docker build \
-        -f Frontend/Dockerfile \
-        -t "${IMAGE}:$(tag)" \
-        -t "${IMAGE}:latest" \
-        .
-
-      docker push "${IMAGE}:$(tag)"
-      docker push "${IMAGE}:latest"
-    displayName: "Build + push Docker image"
-    env:
-      DOCKER_USERNAME: $(docker-username)
+  # Build and push Docker image
+  - task: Docker@2
+    displayName: "Build and push Docker image"
+    inputs:
+      command: buildAndPush
+      repository: "$(imageName)"
+      tags: |
+        $(tag)
+        latest
+      dockerfile: Frontend/Dockerfile
+      buildContext: .
+      containerRegistry: azrdocker-connection
 
   # Deploy: update Azure Container App image
   - task: AzureCLI@2
