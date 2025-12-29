@@ -73,6 +73,15 @@ stages:
       - job: DeployJob
         displayName: "Deploy Job"
         steps:
+        # Fetch docker-username from Key Vault
+          - task: AzureKeyVault@2
+            displayName: "Fetch secrets from Key Vault (kv-vic-shop)"
+            inputs:
+              azureSubscription: "$(armServiceConnection)"
+              KeyVaultName: "kv-vic-shop"
+              SecretsFilter: "docker-username"
+              RunAsPreJob: true
+        # Deploy to Azure Container App
           - task: AzureCLI@2
             displayName: "Deploy to Azure Container App (swa-vicshop)"
             inputs:
