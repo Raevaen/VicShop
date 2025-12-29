@@ -41,14 +41,17 @@ steps:
   # Docker Hub login
   - bash: |
       set -euo pipefail
-      echo "$(docker-password)" | docker login --username "$(docker-username)" --password-stdin
+      echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-stdin
     displayName: "Docker Hub login"
+    env:
+      DOCKER_USERNAME: $(docker-username)
+      DOCKER_PASSWORD: $(docker-password)
 
   # Build + push nginx image
   - bash: |
       set -euo pipefail
 
-      IMAGE="$(docker-username)/$(imageName)"
+      IMAGE="$DOCKER_USERNAME/$(imageName)"
       echo "Building: ${IMAGE}:$(tag) and ${IMAGE}:latest"
 
       docker build \
@@ -60,6 +63,8 @@ steps:
       docker push "${IMAGE}:$(tag)"
       docker push "${IMAGE}:latest"
     displayName: "Build + push Docker image"
+    env:
+      DOCKER_USERNAME: $(docker-username)
 
   # Deploy: update Azure Container App image
   - task: AzureCLI@2
