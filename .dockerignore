@@ -1,0 +1,10 @@
+**/.git
+**/.github
+**/.vscode
+**/.DS_Store
+
+**/node_modules
+Frontend/dist
+**/npm-debug.log
+**/yarn-error.log
+
