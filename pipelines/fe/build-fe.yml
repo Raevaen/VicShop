@@ -1,0 +1,84 @@
+# azure-pipelines.yml
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  armServiceConnection: "azure-connection"
+  imageName: "vicshop-fe"
+  containerAppName: "swa-vicshop"
+  tag: "$(Build.BuildId)"
+
+steps:
+  - checkout: self
+    displayName: "Checkout"
+
+  # Fetch docker-username and docker-password from Key Vault
+  - task: AzureKeyVault@2
+    displayName: "Fetch secrets from Key Vault (kv-vic-shop)"
+    inputs:
+      azureSubscription: "<AZURE_SERVICE_CONNECTION_NAME>"
+      KeyVaultName: "kv-vic-shop"
+      SecretsFilter: "docker-username,docker-password"
+      RunAsPreJob: true
+
+  # Build the Vite app (optional but recommended to fail fast before docker build)
+  - task: NodeTool@0
+    displayName: "Use Node 20"
+    inputs:
+      versionSpec: "20.x"
+
+  - script: |
+      set -e
+      cd Frontend
+      npm ci
+      npm run build
+    displayName: "Build Vite/React (Frontend)"
+
+  # Docker Hub login
+  - bash: |
+      set -euo pipefail
+      echo "$(docker-password)" | docker login --username "$(docker-username)" --password-stdin
+    displayName: "Docker Hub login"
+
+  # Build + push nginx image
+  - bash: |
+      set -euo pipefail
+
+      IMAGE="$(docker-username)/$(imageName)"
+      echo "Building: ${IMAGE}:$(tag) and ${IMAGE}:latest"
+
+      docker build \
+        -f Frontend/Dockerfile \
+        -t "${IMAGE}:$(tag)" \
+        -t "${IMAGE}:latest" \
+        .
+
+      docker push "${IMAGE}:$(tag)"
+      docker push "${IMAGE}:latest"
+    displayName: "Build + push Docker image"
+
+  # Deploy: update Azure Container App image
+  - task: AzureCLI@2
+    displayName: "Deploy to Azure Container App (swa-vicshop)"
+    inputs:
+      azureSubscription: "${armServiceConnection}"
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        set -euo pipefail
+
+        IMAGE="$(docker-username)/$(imageName):$(tag)"
+        echo "Deploying image: ${IMAGE}"
+
+        az extension add --name containerapp --upgrade
+
+        az containerapp update \
+          --name "$(containerAppName)" \
+          --resource-group "<AZURE_RESOURCE_GROUP>" \
+          --image "${IMAGE}"
