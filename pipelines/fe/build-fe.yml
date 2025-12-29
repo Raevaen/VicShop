@@ -33,7 +33,7 @@ steps:
 
   - script: |
       set -e
-      cd Frontend
+      
       npm ci
       npm run build
     displayName: "Build Vite/React (Frontend)"
@@ -46,6 +46,22 @@ steps:
       containerRegistry: azrdocker-connection
 
   # Build and push Docker image
+  - task: Docker@2
+    inputs:
+      containerRegistry: 'azrdocker-connection'
+      repository: "$(imageName)"
+      command: 'build'
+      Dockerfile: '**/Dockerfile'
+
+  - task: Docker@2
+    inputs:
+      containerRegistry: 'azrdocker-connection'
+      repository: "$(imageName)"
+      tags: |
+        $(tag)
+        latest
+      command: 'push'
+
   - task: Docker@2
     displayName: "Build and push Docker image"
     inputs:
