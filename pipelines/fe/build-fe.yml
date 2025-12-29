@@ -8,7 +8,9 @@ pool:
 
 variables:
   armServiceConnection: "azure-connection"
+  dockerServiceConnection: "azrdocker-connection"
   imageName: "vicshop-fe"
+  rgNmae: "rg-vic-eshop"
   containerAppName: "swa-vicshop"
   tag: "$(Build.BuildId)"
 
@@ -16,13 +18,13 @@ steps:
   - checkout: self
     displayName: "Checkout"
 
-  # Fetch docker-username and docker-password from Key Vault
+  # Fetch docker-username from Key Vault
   - task: AzureKeyVault@2
     displayName: "Fetch secrets from Key Vault (kv-vic-shop)"
     inputs:
       azureSubscription: "$(armServiceConnection)"
       KeyVaultName: "kv-vic-shop"
-      SecretsFilter: "docker-username,docker-password"
+      SecretsFilter: "docker-username"
       RunAsPreJob: true
 
   # Build the Vite app (optional but recommended to fail fast before docker build)
@@ -42,37 +44,21 @@ steps:
   - task: Docker@2
     displayName: "Login to Docker registry"
     inputs:
-      command: login
-      containerRegistry: azrdocker-connection
+      containerRegistry: "$(dockerServiceConnection)"
+      command: "login"
 
   # Build and push Docker image
-  - task: Docker@2
-    inputs:
-      containerRegistry: 'azrdocker-connection'
-      repository: "$(imageName)"
-      command: 'build'
-      Dockerfile: '**/Dockerfile'
-
-  - task: Docker@2
-    inputs:
-      containerRegistry: 'azrdocker-connection'
-      repository: "$(imageName)"
-      tags: |
-        $(tag)
-        latest
-      command: 'push'
-
   - task: Docker@2
     displayName: "Build and push Docker image"
     inputs:
       command: buildAndPush
-      repository: "$(imageName)"
+      repository: "$(docker-username)/$(imageName)"
       tags: |
         $(tag)
         latest
       dockerfile: Frontend/Dockerfile
       buildContext: .
-      containerRegistry: azrdocker-connection
+      containerRegistry: "$(dockerServiceConnection)"
 
   # Deploy: update Azure Container App image
   - task: AzureCLI@2
@@ -91,5 +77,5 @@ steps:
 
         az containerapp update \
           --name "$(containerAppName)" \
-          --resource-group "<AZURE_RESOURCE_GROUP>" \
+          --resource-group "$(rgName)" \
           --image "${IMAGE}"
