@@ -34,6 +34,8 @@ stages:
               SecretsFilter: "docker-username"
               RunAsPreJob: true
 
+          
+
           # .NET build/test (update solution/project paths)
           - task: UseDotNet@2
             displayName: "Use .NET SDK"
@@ -41,14 +43,31 @@ stages:
               packageType: "sdk"
               version: "8.x"
 
-          - script: |
-              set -e
-              dotnet restore
-              dotnet build -c Release --no-restore
-              dotnet test -c Release --no-build
-            displayName: "Restore/Build/Test (C#)"
-            workingDirectory: Backend # <-- change if your BE lives elsewhere
+          # - script: |
+          #     set -e
+          #     dotnet restore
+          #     dotnet build -c Release --no-restore
+          #     dotnet test -c Release --no-build
+          #   displayName: "Restore/Build/Test (C#)"
+          #   workingDirectory: Backend # <-- change if your BE lives elsewhere
 
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'restore'
+              feedsToUse: 'select'
+              workingDirectory: 'Backend'
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'build'
+              arguments: '-c Release --no-restore'
+              workingDirectory: 'Backend'
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'test'
+              arguments: '-c Release --no-build'
+              testRunTitle: 'BE tests'
+              workingDirectory: 'Backend'
+        
           # Login via service connection
           - task: Docker@2
             displayName: "Login to Docker registry"
@@ -65,8 +84,8 @@ stages:
               tags: |
                 $(tag)
                 latest
-              dockerfile: Backend/Dockerfile # <-- change if different
-              buildContext: .                # <-- change if you want Backend as context
+              dockerfile: Backend/Dockerfile 
+              buildContext: Backend                
               containerRegistry: "$(dockerServiceConnection)"
 
   - stage: Deploy
