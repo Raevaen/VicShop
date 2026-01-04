@@ -1,0 +1,122 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  armServiceConnection: "azure-connection"
+  dockerServiceConnection: "azrdocker-connection"
+  # adjust names as needed for BE
+  imageName: "vicshop-be"
+  rgName: "rg-vic-eshop"
+  tag: "$(Build.BuildId)"
+  webAppName: "vicshop-be"
+
+stages:
+  - stage: BuildAndPush
+    displayName: "Build, Test, Build+Push Docker Image"
+    jobs:
+      - job: BuildAndPushJob
+        displayName: "BuildAndPush"
+        steps:
+          - checkout: self
+            displayName: "Checkout"
+
+          # Fetch docker-username from Key Vault (used to form DockerHub repo path)
+          - task: AzureKeyVault@2
+            displayName: "Fetch secrets from Key Vault (kv-vic-shop)"
+            inputs:
+              azureSubscription: "$(armServiceConnection)"
+              KeyVaultName: "kv-vic-shop"
+              SecretsFilter: "docker-username"
+              RunAsPreJob: true
+
+          
+
+          # .NET build/test (update solution/project paths)
+          - task: UseDotNet@2
+            displayName: "Use .NET SDK"
+            inputs:
+              packageType: "sdk"
+              version: "9.x"
+
+          # - script: |
+          #     set -e
+          #     dotnet restore
+          #     dotnet build -c Release --no-restore
+          #     dotnet test -c Release --no-build
+          #   displayName: "Restore/Build/Test (C#)"
+          #   workingDirectory: Backend # <-- change if your BE lives elsewhere
+
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'restore'
+              feedsToUse: 'select'
+              workingDirectory: 'Backend'
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'build'
+              arguments: '-c Release --no-restore'
+              workingDirectory: 'Backend'
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'test'
+              arguments: '-c Release --no-build'
+              testRunTitle: 'BE tests'
+              workingDirectory: 'Backend'
+        
+          # Login via service connection
+          - task: Docker@2
+            displayName: "Login to Docker registry"
+            inputs:
+              containerRegistry: "$(dockerServiceConnection)"
+              command: "login"
+
+          # Build and push image (update dockerfile/buildContext)
+          - task: Docker@2
+            displayName: "Build and push Docker image"
+            inputs:
+              command: buildAndPush
+              repository: "$(docker-username)/$(imageName)"
+              tags: |
+                $(tag)
+                latest
+              dockerfile: Backend/Dockerfile 
+              buildContext: Backend                
+              containerRegistry: "$(dockerServiceConnection)"
+
+  - stage: Deploy
+    displayName: "Deploy to Azure App Service (Web App for Containers)"
+    dependsOn: BuildAndPush
+    jobs:
+      - job: DeployJob
+        displayName: "Deploy"
+        steps:
+          # Fetch docker-username again (stage isolation)
+          - task: AzureKeyVault@2
+            displayName: "Fetch secrets from Key Vault (kv-vic-shop)"
+            inputs:
+              azureSubscription: "$(armServiceConnection)"
+              KeyVaultName: "kv-vic-shop"
+              SecretsFilter: "docker-username"
+              RunAsPreJob: true
+
+          # Replace AzureCLI@2 with AzureRmWebAppDeployment@4
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Deploy container to App Service"
+            inputs:
+              ConnectionType: "AzureRM"
+              azureSubscription: "$(armServiceConnection)"
+              appType: "webAppContainer"
+              WebAppName: "$(webAppName)"
+              ResourceGroupName: "$(rgName)"
+              DockerNamespace: "$(docker-username)"        # DockerHub username/org
+              DockerRepository: "$(imageName)"            # repo name (no namespace)
+              DockerImageTag: "$(tag)"
+              # If your Web App pulls from a private registry, you may also need:
+              # DockerRegistryServerUrl: "https://index.docker.io/v1"
+              # DockerRegistryServerUserName: "$(docker-username)"
+              # DockerRegistryServerPassword: "$(docker-password)"  # would require KV secret
