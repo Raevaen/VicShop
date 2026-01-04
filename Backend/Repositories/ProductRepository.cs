@@ -29,4 +29,19 @@ public class ProductRepository : IProductRepository
 
     public async Task<Product?> GetBySlugAsync(string slug) =>
         await _products.Find(p => p.Slug == slug).FirstOrDefaultAsync();
+
+    public async Task CreateAsync(Product product)
+    {
+        await _products.InsertOneAsync(product);
+    }
+
+    public async Task UpdateAsync(string id, Product product)
+    {
+        await _products.ReplaceOneAsync(p => p.Id == id, product);
+    }
+
+    public async Task DeleteAsync(string id)
+    {
+        await _products.DeleteOneAsync(p => p.Id == id);
+    }
 }

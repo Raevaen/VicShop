@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Identity.Web.Resource;
 using VicShopAPI.Models;
 using VicShopAPI.Repositories;
 
@@ -28,5 +30,34 @@ public class ProductsController : ControllerBase
         var product = await _repository.GetBySlugAsync(slug);
         if (product == null) return NotFound();
         return Ok(product);
+    }
+
+    [Authorize]
+    [RequiredScope("products.admin")]
+    [HttpPost]
+    public async Task<ActionResult<Product>> Create(Product product)
+    {
+        await _repository.CreateAsync(product);
+        return CreatedAtAction(nameof(GetBySlug), new { slug = product.Slug }, product);
+    }
+
+    [Authorize]
+    [RequiredScope("products.admin")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(string id, Product product)
+    {
+        if (id != product.Id) return BadRequest();
+        
+        await _repository.UpdateAsync(id, product);
+        return NoContent();
+    }
+
+    [Authorize]
+    [RequiredScope("products.admin")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(string id)
+    {
+        await _repository.DeleteAsync(id);
+        return NoContent();
     }
 }
