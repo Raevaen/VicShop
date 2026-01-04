@@ -1,5 +1,4 @@
-trigger:
-- notmain
+# Removed the trigger section as the pipeline is not configured
 
 pool:
   vmImage: 'ubuntu-latest'
