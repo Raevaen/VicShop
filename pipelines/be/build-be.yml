@@ -12,7 +12,6 @@ variables:
   # adjust names as needed for BE
   imageName: "vicshop-be"
   rgName: "rg-vic-eshop"
-  containerAppName: "aca-vicshop-be"
   tag: "$(Build.BuildId)"
   webAppName: "vicshop-be"
 
