@@ -82,21 +82,13 @@ stages:
               SecretsFilter: "docker-username"
               RunAsPreJob: true
         # Deploy to Azure Container App
-          - task: AzureCLI@2
-            displayName: "Deploy to Azure Container App (swa-vicshop)"
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Deploy to Azure App Service (swa-vicshop)"
             inputs:
-              azureSubscription: "$(armServiceConnection)"
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                set -euo pipefail
-
-                IMAGE="$(docker-username)/$(imageName):$(tag)"
-                echo "Deploying image: ${IMAGE}"
-
-                az extension add --name containerapp --upgrade
-
-                az containerapp update \
-                  --name "$(containerAppName)" \
-                  --resource-group "$(rgName)" \
-                  --image "${IMAGE}"
+              ConnectionType: 'AzureRM'
+              azureSubscription: '$(armServiceConnection)'
+              appType: 'webAppContainer'
+              WebAppName: '$(containerAppName)'
+              DockerNamespace: '$(docker-username)'
+              DockerRepository: '$(imageName)'
+              DockerImageTag: '$(tag)'
