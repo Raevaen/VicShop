@@ -1,9 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 
 const ProductCard = ({ product }) => {
     const { addToCart } = useCart();
+    const [isAdded, setIsAdded] = useState(false);
+
+    const handleAddToCart = (e) => {
+        e.preventDefault();
+        if (isAdded) return;
+
+        addToCart(product);
+        setIsAdded(true);
+
+        setTimeout(() => {
+            setIsAdded(false);
+        }, 1500);
+    };
 
     const formatPrice = (cents) => {
         return new Intl.NumberFormat('en-US', {
@@ -31,10 +44,13 @@ const ProductCard = ({ product }) => {
                     <p className="product-description">{product.description}</p>
                     <div className="product-footer">
                         <span className="product-price">{formatPrice(product.priceCents)}</span>
-                        <button className="btn btn-sm btn-primary" onClick={(e) => {
-                            e.preventDefault();
-                            addToCart(product);
-                        }}>Add to Cart</button>
+                        <button
+                            className="btn btn-sm btn-primary"
+                            onClick={handleAddToCart}
+                            disabled={isAdded}
+                        >
+                            {isAdded ? 'Added!' : 'Add to Cart'}
+                        </button>
                     </div>
                 </div>
             </Link>
