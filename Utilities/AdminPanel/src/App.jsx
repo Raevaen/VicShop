@@ -41,13 +41,17 @@ const Login = () => {
     );
 };
 
+import { NotificationProvider } from './context/NotificationContext';
+
 function App() {
   return (
     <MsalProvider instance={msalInstance}>
       <AuthenticatedTemplate>
-        <BrowserRouter>
-            <MainContent />
-        </BrowserRouter>
+        <NotificationProvider>
+          <BrowserRouter>
+              <MainContent />
+          </BrowserRouter>
+        </NotificationProvider>
       </AuthenticatedTemplate>
       <UnauthenticatedTemplate>
         <Login />

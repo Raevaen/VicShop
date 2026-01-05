@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getProducts, deleteProduct } from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 const Dashboard = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { showSuccess, showError } = useNotification();
 
     useEffect(() => {
         loadProducts();
@@ -16,6 +18,7 @@ const Dashboard = () => {
             setProducts(data);
         } catch (error) {
             console.error("Failed to load products", error);
+            showError("Impossibile caricare i prodotti");
         } finally {
             setLoading(false);
         }
@@ -26,9 +29,10 @@ const Dashboard = () => {
             try {
                 await deleteProduct(id);
                 setProducts(products.filter(p => p.id !== id));
+                showSuccess("Prodotto eliminato con successo");
             } catch (error) {
                 console.error("Failed to delete product", error);
-                alert("Impossibile eliminare il prodotto");
+                showError("Impossibile eliminare il prodotto");
             }
         }
     };

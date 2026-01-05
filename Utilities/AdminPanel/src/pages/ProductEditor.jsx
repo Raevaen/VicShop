@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { createProduct, getProduct, updateProduct } from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 const ProductEditor = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
+    const { showSuccess, showError } = useNotification();
     const isEditing = !!slug;
 
     const [loading, setLoading] = useState(isEditing);
@@ -18,6 +20,9 @@ const ProductEditor = () => {
         slug: '',
         description: ''
     });
+
+    // Track if slug was manually edited to stop auto-generation
+    const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
     useEffect(() => {
         if (isEditing) {
@@ -38,21 +43,44 @@ const ProductEditor = () => {
                 slug: product.slug || '',
                 description: product.description || ''
             });
+            // If editing, assume slug is "fixed" unless user changes it
+            setSlugManuallyEdited(true);
         } catch (error) {
             console.error("Failed to load product", error);
-            alert("Impossibile caricare il prodotto");
+            showError("Impossibile caricare il prodotto");
             navigate('/');
         } finally {
             setLoading(false);
         }
     };
 
+    const generateSlug = (text) => {
+        return text
+            .toString()
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')        // Replace spaces with -
+            .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
+            .replace(/\-\-+/g, '-');     // Replace multiple - with single -
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        
+        setFormData(prev => {
+            const newData = { ...prev, [name]: value };
+            
+            // Auto-generate slug from title if not manually edited
+            if (name === 'title' && !slugManuallyEdited && !isEditing) {
+                newData.slug = generateSlug(value);
+            }
+            
+            return newData;
+        });
+
+        if (name === 'slug') {
+            setSlugManuallyEdited(true);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -65,15 +93,37 @@ const ProductEditor = () => {
         };
 
         try {
+            // Check slug uniqueness if creating or if slug changed during edit
+            // Simple check: try to get product by slug. 
+            // If we find one and it's not the current one (by ID), it's a conflict.
+            try {
+                const existingProduct = await getProduct(payload.slug);
+                if (existingProduct) {
+                    if (!isEditing || existingProduct.id !== formData.id) {
+                        showError("Slug già esistente! Scegline un altro.");
+                        setSubmitting(false);
+                        return;
+                    }
+                }
+            } catch (error) {
+                // 404 means slug is free (usually), or 500 error. 
+                // We assume 404 is good.
+                if (error.response && error.response.status !== 404) {
+                    throw error; // Rethrow real errors
+                }
+            }
+
             if (isEditing) {
                 await updateProduct(formData.id, payload);
+                showSuccess("Prodotto aggiornato con successo!");
             } else {
                 await createProduct(payload);
+                showSuccess("Prodotto creato con successo!");
             }
             navigate('/');
         } catch (error) {
             console.error("Failed to save product", error);
-            alert("Errore durante il salvataggio: " + (error.response?.data?.message || error.message));
+            showError("Errore durante il salvataggio: " + (error.response?.data?.message || error.message));
         } finally {
             setSubmitting(false);
         }
@@ -144,13 +194,14 @@ const ProductEditor = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Slug (URL identifier)</label>
+                            <label className="form-label">Slug (Identificativo URL)</label>
                             <input 
                                 type="text" 
                                 name="slug" 
                                 className="form-input" 
                                 value={formData.slug} 
                                 onChange={handleChange} 
+                                placeholder="Generato automaticamente"
                                 required 
                             />
                         </div>
