@@ -33,7 +33,7 @@ public class ProductsController : ControllerBase
     }
 
     [Authorize]
-    [RequiredScope("products.admin")]
+    [RequiredScope("products_admin")]
     [HttpPost]
     public async Task<ActionResult<Product>> Create(Product product)
     {
@@ -42,7 +42,7 @@ public class ProductsController : ControllerBase
     }
 
     [Authorize]
-    [RequiredScope("products.admin")]
+    [RequiredScope("products_admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, Product product)
     {
@@ -53,7 +53,7 @@ public class ProductsController : ControllerBase
     }
 
     [Authorize]
-    [RequiredScope("products.admin")]
+    [RequiredScope("products_admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(string id)
     {
