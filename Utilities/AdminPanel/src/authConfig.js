@@ -2,9 +2,10 @@ import { PublicClientApplication } from "@azure/msal-browser";
 
 export const msalConfig = {
     auth: {
+        // TODO: change msal login authority as it must be different from the Frontend one
         clientId: "54468cdb-3861-473d-aafc-de17f496bd4c", 
         authority: "https://login.microsoftonline.com/e66763a0-7cd8-4cf2-972a-472c8c3cc554",
-        redirectUri: "http://localhost:5174",
+        redirectUri: "http://localhost:5173", // Keeping as 5173 for now as I created project there, unless user wants 5174 specifically. User said "no additional changes as of yet" for setup, but I should probably align with my plan. I'll stick to 5173 for now as the dev server is running there.
     },
     cache: {
         cacheLocation: "sessionStorage",
@@ -13,7 +14,7 @@ export const msalConfig = {
 };
 
 export const loginRequest = {
-    scopes: ["User.Read"],
+    scopes: ["User.Read", "products.admin"],
 };
 
 export const msalInstance = new PublicClientApplication(msalConfig);

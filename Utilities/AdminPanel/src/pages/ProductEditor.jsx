@@ -16,13 +16,8 @@ const ProductEditor = () => {
         price: '',
         image: '',
         slug: '',
-        description: '' // Added description field based on typical product models
+        description: ''
     });
-    // Need to verify Product model in backend to ensure all fields are covered.
-    // Based on `ProductsController.cs` viewing, I can't see the model definition directly but can infer or check Models/Product.cs.
-    // I'll stick to common fields for now and can refine if needed.
-    // Wait, let me check the model quickly in thought or just assume these key fields.
-    // Title, Team, League, Price, Image, Slug are standard.
 
     useEffect(() => {
         if (isEditing) {
@@ -33,7 +28,6 @@ const ProductEditor = () => {
     const loadProduct = async () => {
         try {
             const product = await getProduct(slug);
-            // Ensure all fields are populated even if null in DB
             setFormData({
                 id: product.id,
                 title: product.title || '',
@@ -46,7 +40,7 @@ const ProductEditor = () => {
             });
         } catch (error) {
             console.error("Failed to load product", error);
-            alert("Failed to load product");
+            alert("Impossibile caricare il prodotto");
             navigate('/');
         } finally {
             setLoading(false);
@@ -67,7 +61,7 @@ const ProductEditor = () => {
 
         const payload = {
             ...formData,
-            price: parseFloat(formData.price) // Ensure price is a number
+            price: parseFloat(formData.price)
         };
 
         try {
@@ -79,7 +73,7 @@ const ProductEditor = () => {
             navigate('/');
         } catch (error) {
             console.error("Failed to save product", error);
-            alert("Failed to save product: " + (error.response?.data?.message || error.message));
+            alert("Errore durante il salvataggio: " + (error.response?.data?.message || error.message));
         } finally {
             setSubmitting(false);
         }
@@ -94,13 +88,13 @@ const ProductEditor = () => {
     return (
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             <div className="header-actions">
-                <h1 className="page-title">{isEditing ? 'Edit Product' : 'New Product'}</h1>
+                <h1 className="page-title">{isEditing ? 'Modifica Prodotto' : 'Nuovo Prodotto'}</h1>
             </div>
 
             <div className="card" style={{ padding: '2rem' }}>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label className="form-label">Product Name</label>
+                        <label className="form-label">Nome Prodotto</label>
                         <input 
                             type="text" 
                             name="title" 
@@ -113,7 +107,7 @@ const ProductEditor = () => {
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                         <div className="form-group">
-                            <label className="form-label">Team</label>
+                            <label className="form-label">Squadra</label>
                             <input 
                                 type="text" 
                                 name="team" 
@@ -124,7 +118,7 @@ const ProductEditor = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">League</label>
+                            <label className="form-label">Lega</label>
                             <input 
                                 type="text" 
                                 name="league" 
@@ -138,7 +132,7 @@ const ProductEditor = () => {
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                         <div className="form-group">
-                            <label className="form-label">Price</label>
+                            <label className="form-label">Prezzo (€)</label>
                             <input 
                                 type="number" 
                                 step="0.01"
@@ -163,7 +157,7 @@ const ProductEditor = () => {
                     </div>
 
                     <div className="form-group">
-                        <label className="form-label">Image URL</label>
+                        <label className="form-label">URL Immagine</label>
                         <input 
                             type="url" 
                             name="image" 
@@ -179,7 +173,7 @@ const ProductEditor = () => {
                         <div className="form-group" style={{ textAlign: 'center', marginBottom: '2rem' }}>
                              <img 
                                 src={formData.image} 
-                                alt="Preview" 
+                                alt="Anteprima" 
                                 style={{ maxHeight: '200px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }} 
                             />
                         </div>
@@ -191,14 +185,14 @@ const ProductEditor = () => {
                             className="btn btn-secondary" 
                             onClick={() => navigate('/')}
                         >
-                            Cancel
+                            Annulla
                         </button>
                         <button 
                             type="submit" 
                             className="btn btn-primary"
                             disabled={submitting}
                         >
-                            {submitting ? 'Saving...' : (isEditing ? 'Update Product' : 'Create Product')}
+                            {submitting ? 'Salvataggio...' : (isEditing ? 'Aggiorna Prodotto' : 'Crea Prodotto')}
                         </button>
                     </div>
                 </form>

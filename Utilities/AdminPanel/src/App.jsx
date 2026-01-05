@@ -34,9 +34,9 @@ const Login = () => {
 
     return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-            <h1>Admin Access Required</h1>
-            <p style={{ color: 'var(--text-secondary)' }}>Please login to manage the shop.</p>
-            <button className="btn btn-primary" onClick={handleLogin}>Log In with Microsoft</button>
+            <h1>Accesso Amministratore Richiesto</h1>
+            <p style={{ color: 'var(--text-secondary)' }}>Effettua il login per gestire il negozio.</p>
+            <button className="btn btn-primary" onClick={handleLogin}>Accedi con Microsoft</button>
         </div>
     );
 };

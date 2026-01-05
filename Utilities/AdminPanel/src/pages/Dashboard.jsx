@@ -16,20 +16,19 @@ const Dashboard = () => {
             setProducts(data);
         } catch (error) {
             console.error("Failed to load products", error);
-            // Optionally add toast notification here
         } finally {
             setLoading(false);
         }
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this product?")) {
+        if (window.confirm("Sei sicuro di voler eliminare questo prodotto?")) {
             try {
                 await deleteProduct(id);
                 setProducts(products.filter(p => p.id !== id));
             } catch (error) {
                 console.error("Failed to delete product", error);
-                alert("Failed to delete product");
+                alert("Impossibile eliminare il prodotto");
             }
         }
     };
@@ -43,9 +42,9 @@ const Dashboard = () => {
     return (
         <div>
             <div className="header-actions">
-                <h1 className="page-title">Products</h1>
+                <h1 className="page-title">Prodotti</h1>
                 <Link to="/new" className="btn btn-primary">
-                    + Add Product
+                    + Aggiungi Prodotto
                 </Link>
             </div>
 
@@ -53,11 +52,11 @@ const Dashboard = () => {
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Team</th>
-                            <th>Price</th>
-                            <th>Actions</th>
+                            <th>Immagine</th>
+                            <th>Nome</th>
+                            <th>Squadra</th>
+                            <th>Prezzo</th>
+                            <th>Azioni</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -72,17 +71,17 @@ const Dashboard = () => {
                                 </td>
                                 <td>{product.title}</td>
                                 <td>{product.team}</td>
-                                <td>${product.price}</td>
+                                <td>€{product.price}</td>
                                 <td style={{ display: 'flex', gap: '0.5rem' }}>
                                     <Link to={`/edit/${product.slug}`} className="btn btn-secondary" style={{ padding: '0.5rem' }}>
-                                        Edit
+                                        Modifica
                                     </Link>
                                     <button 
                                         className="btn btn-danger" 
                                         style={{ padding: '0.5rem' }}
                                         onClick={() => handleDelete(product.id)}
                                     >
-                                        Delete
+                                        Elimina
                                     </button>
                                 </td>
                             </tr>
@@ -90,7 +89,7 @@ const Dashboard = () => {
                         {products.length === 0 && (
                             <tr>
                                 <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-                                    No products found. Add one to get started!
+                                    Nessun prodotto trovato. Aggiungine uno per iniziare!
                                 </td>
                             </tr>
                         )}

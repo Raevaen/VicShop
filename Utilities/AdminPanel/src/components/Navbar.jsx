@@ -11,13 +11,13 @@ const Navbar = () => {
 
     return (
         <nav className="navbar">
-            <Link to="/" className="navbar-brand">VicShop Admin</Link>
+            <Link to="/" className="navbar-brand">VicShop Amministrazione</Link>
             <div className="nav-user">
                 <span style={{ color: 'var(--text-secondary)' }}>
                     {accounts[0]?.name}
                 </span>
                 <button className="btn btn-secondary" onClick={handleLogout}>
-                    Sign Out
+                    Esci
                 </button>
             </div>
         </nav>
