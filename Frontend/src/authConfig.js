@@ -2,9 +2,11 @@ import { PublicClientApplication } from "@azure/msal-browser";
 
 export const msalConfig = {
     auth: {
-        clientId: "54468cdb-3861-473d-aafc-de17f496bd4c", 
-        authority: "https://login.microsoftonline.com/e66763a0-7cd8-4cf2-972a-472c8c3cc554",
-        redirectUri: window.location.origin,
+        clientId: "54468cdb-3861-473d-aafc-de17f496bd4c",
+        authority: "https://salentech.b2clogin.com/salentech.onmicrosoft.com/B2C_1_susi",
+        knownAuthorities: ["salentech.b2clogin.com"],
+        redirectUri: "http://localhost:5173",
+        navigateToLoginRequestUrl: false,
     },
     cache: {
         cacheLocation: "sessionStorage",
@@ -13,7 +15,7 @@ export const msalConfig = {
 };
 
 export const loginRequest = {
-    scopes: ["User.Read"],
+    scopes: ["https://salentech.onmicrosoft.com/54468cdb-3861-473d-aafc-de17f496bd4c/access_as_user"],
 };
 
 export const msalInstance = new PublicClientApplication(msalConfig);
