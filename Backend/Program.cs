@@ -26,6 +26,7 @@ builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(builder.Configu
 builder.Services.AddSingleton<IMongoDatabase>(sp => sp.GetRequiredService<IMongoClient>().GetDatabase(builder.Configuration["MongoDB:Database"]));
 builder.Services.AddSingleton<IProductRepository, ProductRepository>();
 builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
+builder.Services.AddSingleton<IUserRepository, UserRepository>();
 
 // Add Mollie payment client
 builder.Services.AddSingleton(sp =>
