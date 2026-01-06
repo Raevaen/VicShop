@@ -69,6 +69,7 @@ stages:
   - stage: Deploy
     displayName: "Deploy to Azure Container App"
     dependsOn: BuildAndPush
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'main'))
     jobs:
       - job: DeployJob
         displayName: "Deploy Job"
