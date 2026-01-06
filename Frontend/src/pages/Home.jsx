@@ -29,6 +29,7 @@ const Home = () => {
                 <div className="filters-container">
                     <select 
                         className="filter-select"
+                        disabled={loading}
                         onChange={(e) => {
                             const val = e.target.value;
                             setProducts([]); // Clear current products
@@ -47,6 +48,7 @@ const Home = () => {
 
                     <select 
                         className="filter-select"
+                        disabled={loading}
                         onChange={(e) => {
                             const val = e.target.value;
                             setProducts([]);
