@@ -1,16 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '../components/Navbar';
 import { useCart } from '../context/CartContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { loginRequest } from '../authConfig';
-import { createOrder } from '../services/orderService';
 
 const Cart = () => {
     const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
     const { instance } = useMsal();
     const isAuthenticated = useIsAuthenticated();
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
 
     const formatPrice = (cents) => {
         return new Intl.NumberFormat('en-US', {
@@ -19,34 +19,18 @@ const Cart = () => {
         }).format(cents / 100);
     };
 
-    const handleCheckout = async () => {
-        if (!isAuthenticated) {
-            try {
-                await instance.loginPopup(loginRequest);
-            } catch (e) {
-                console.error("Login failed:", e);
-                return;
-            }
-        }
-
-        // Prepare order data
-        const orderData = {
-            items: cartItems.map(item => ({
-                productId: item.id || item._id, // Handle both ID formats if necessary
-                title: item.title,
-                quantity: item.quantity,
-                priceCents: item.priceCents
-            })),
-            totalAmountCents: cartTotal
-        };
-
+    const handleProceedToCheckout = async () => {
+        setIsLoading(true);
         try {
-            await createOrder(orderData);
-            clearCart();
-            navigate('/checkout/success');
-        } catch (error) {
-            console.error("Checkout failed:", error);
-            navigate('/checkout/failed');
+            if (!isAuthenticated) {
+                await instance.loginPopup(loginRequest);
+            }
+            navigate('/checkout');
+        } catch (e) {
+            console.error("Login failed:", e);
+            // Optionally, show an error message to the user
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -74,11 +58,21 @@ const Cart = () => {
                                         </div>
                                         <div className="cart-item-actions">
                                             <div className="quantity-controls">
-                                                <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
+                                                <button
+                                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                    aria-label={`Decrease quantity of ${item.title}`}
+                                                >-</button>
                                                 <span>{item.quantity}</span>
-                                                <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                                                <button
+                                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                    aria-label={`Increase quantity of ${item.title}`}
+                                                >+</button>
                                             </div>
-                                            <button className="btn btn-sm btn-outline remove-btn" onClick={() => removeFromCart(item.id)}>Remove</button>
+                                            <button
+                                                className="btn btn-sm btn-outline remove-btn"
+                                                onClick={() => removeFromCart(item.id)}
+                                                aria-label={`Remove ${item.title} from cart`}
+                                            >Remove</button>
                                         </div>
                                     </div>
                                 ))}
@@ -91,7 +85,13 @@ const Cart = () => {
                                 </div>
                                 <div className="cart-buttons">
                                     <button className="btn btn-outline" onClick={clearCart}>Clear Cart</button>
-                                    <Link to="/checkout" className="btn btn-primary checkout-btn">Proceed to Checkout</Link>
+                                    <button
+                                        className="btn btn-primary checkout-btn"
+                                        onClick={handleProceedToCheckout}
+                                        disabled={isLoading}
+                                    >
+                                        {isLoading ? 'Authenticating...' : 'Proceed to Checkout'}
+                                    </button>
                                 </div>
                             </div>
                         </>
